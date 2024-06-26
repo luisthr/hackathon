@@ -122,12 +122,16 @@ def info(perfil_id):
             purpose_str = "rental_price"
 
         query = f"""
-            SELECT property_id, score, description, sepomex_id, purpose, type_children, {purpose_str} as price, bathrooms, bedrooms
+            SELECT property_id, score, description, sepomex_id, purpose, type_children, {purpose_str} as price, bathrooms, bedrooms, parking_num
             FROM properties_search
             WHERE sepomex_id = {sepomex_id}
             AND purpose = {purpose}
             AND type_children = {type_children}
             AND status = 1
+            AND {purpose_str} >= 95000
+            AND {purpose_str} <= 105000
+            AND bedrooms >= 1
+            AND parking_num => 1
             ORDER BY score DESC
             limit 50
         """
@@ -138,7 +142,7 @@ def info(perfil_id):
         properties = []
         for x in myresult:
             properties.append(x)
-        result_properties = pd.DataFrame(properties,columns=['id', 'score', 'description', 'sepomex_id', 'purpose', 'type_children', 'price', 'bathrooms', 'bedrooms'])
+        result_properties = pd.DataFrame(properties,columns=['id', 'score', 'description', 'sepomex_id', 'purpose', 'type_children', 'price', 'bathrooms', 'bedrooms','parking_num'])
 
         print(result_properties)
 
