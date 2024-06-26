@@ -30,7 +30,7 @@ def post_gemini(json_result_properties: dict):
 
     perfil = "estudiante"
     transaction = "venta"
-    price = 150000
+    price = 850000
     habitaciones = 4
     parking_num = 1
 
@@ -105,6 +105,7 @@ def info(perfil_id):
     result_profiled = pd.DataFrame(profiled_user, columns=['id','sepomex_id', 'purpose', 'type_children'])
     
     print(result_profiled)
+    print(f"RESULTADO")
     print(result_profiled['sepomex_id'])
 
     # Propiedades similares
@@ -137,7 +138,7 @@ def info(perfil_id):
         properties = []
         for x in myresult:
             properties.append(x)
-        result_properties = pd.DataFrame(properties,columns=['id', 'scoreTotal', 'description', 'sepomex_id', 'purpose', 'type_children','price', 'bathrooms', 'bedrooms'])
+        result_properties = pd.DataFrame(properties,columns=['id', 'score', 'description', 'sepomex_id', 'purpose', 'type_children', 'price', 'bathrooms', 'bedrooms'])
 
         print(result_properties)
 
