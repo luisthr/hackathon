@@ -49,7 +49,7 @@ def post_gemini(json_result_properties: dict, perfil, purpose, price, bedrooms, 
         {json_result_properties}
         ```
         Deberás responder con la razón del por qué escogiste esas propiedades, el id de la propiedad, y el puntaje de compatibilidad de acuerdo al perfil del 1 al 100.
-        Devuele un máximo de 9 opciones de propiedades.
+        Devuele un máximo de 3 opciones de propiedades.
         Responde con el siguiente JSON schema:
         ```
         {
