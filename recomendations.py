@@ -177,9 +177,35 @@ def post_recomendations():
         json_result_properties = result_properties.to_json(orient ='records') 
         # print("json_index = ", json_result_properties, "\n") 
 
-        # ENvia datos a Gemini
+        # Envia datos a Gemini
         print("-------- Envia datos a Gemini")
-        post_gemini(json_result_properties)
+        recomendetions = post_gemini(json_result_properties)
+        get_recomendations(recomendetions, conexion_w)
 
+def get_recomendations(recomendetions, conexion_w):
+    print("-------- Obtiene la informacion de las recomendaciones")
+
+    property_list = []
+    for property in recomendetions:
+        property_id = property['id']
+        property_list.append(property_id)
+    
+    listToStrIds = ','.join([str(elem) for elem in property_list])
+    
+    query = f"""
+        SELECT property_id, score, description, sepomex_id, purpose, type_children, score, IF(purpose = 1, sale_price, rental_price) as price, bathrooms, bedrooms, parking_num
+        FROM properties_search
+        WHERE property_id in ({listToStrIds})
+    """
+    # print(query)
+    mycursor_w = conexion_w.cursor()
+    mycursor_w.execute(query)
+    myresult = mycursor_w.fetchall()
+    properties = []
+    for x in myresult:
+        properties.append(x)
+    result_properties = pd.DataFrame(properties,columns=['id', 'score', 'description', 'sepomex_id', 'purpose', 'type_children', 'price', 'bathrooms', 'bedrooms','parking_num'])
+    
+    print(result_properties)
 
 h = post_recomendations()
