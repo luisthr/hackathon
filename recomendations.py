@@ -35,8 +35,11 @@ def post_gemini(json_result_properties: dict):
     parking_num = 1
 
     prompt = f"""
-        Eres una persona con un perfil de {perfil}, un inmueble en {transaction}, con un presupuesto de {price} pesos MXN y con una elasticidad de -5%. Tienes que encontrar los inmuebles ideales para este perfil.
-        El inmueble tiene que contar con al menos {habitaciones} cuartos y con al menos {parking_num} estacionamientos. 
+        Eres una persona con un perfil de {perfil}, un inmueble en {transaction}, con un presupuesto de {price} pesos MXN y con una elasticidad de 5%. 
+        Tienes que encontrar los inmuebles ideales para este perfil, teniendo en cuenta lo siguiente:
+        El inmueble tiene que contar con al menos {habitaciones} recámaras y con {parking_num} estacionamientos.
+        La persona quiere un inmueble cerca a Universidad Insurgentes Plantel Viaducto, Universidad Autónoma de la Ciudad de México Plantel Centro Histórico, Panteón Francés de la Piedad, Museo del Juguete Antiguo México, Mercado Jamaica.
+
         Ten en cuenta lo siguientes para los campos del JSON para la selección de las mejores propiedades:
         - price: Presupuesto de la persona.
         - scoreTotal: Puntaje total de la propiedad del 1 al 100, teniendo en cuenta que hay unas propiedades que sobrepasan el 100 por bonificaciones adicionales.
