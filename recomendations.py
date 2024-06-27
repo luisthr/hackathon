@@ -7,10 +7,9 @@ import json
 
 def post_gemini(json_result_properties: dict, perfil, purpose, price, bedrooms, parking_num, places_of_interest):
     print("-------- Envia datos a GeminI")
+
     genai.configure(api_key="AIzaSyBsNf6f-iGUKqr8gJyJQ5BtmyOZgn7adsE")
 
-    # Create the model
-    # See https://ai.google.dev/api/python/google/generativeai/GenerativeModel
     generation_config = {
     "temperature": 0,
     "top_p": 0.95,
@@ -19,15 +18,20 @@ def post_gemini(json_result_properties: dict, perfil, purpose, price, bedrooms, 
     "response_mime_type": "application/json",
     }
 
+    model_name: str = "gemini-1.5-flash"
+
     model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
-    generation_config=generation_config
+        model_name=model_name,
+        generation_config=generation_config
     )
 
-    output = """[{id: str,
-            reason: str,
-            price: int,
-            score: float}]"""
+    output = """[
+            {
+                id: str,
+                reason: str,
+                price: int,
+            }
+        ]"""
 
     prompt = f"""
         Eres una persona con un perfil de {perfil}, un inmueble en {purpose}, con un presupuesto de {price} pesos MXN y con una elasticidad de 5%. 
@@ -45,38 +49,34 @@ def post_gemini(json_result_properties: dict, perfil, purpose, price, bedrooms, 
         - bedrooms: Habitaciones o recámaras
         - bathrooms: Baños
         Deberás de tener en cuenta que el presupuesto de la persona no deberá superar el precio de {price} la propiedad.
-        A continuación, te presentamos todas las propiedades acordes al perfil,
+        Ten en cuenta el perfil de la persona, ya que las necesidades van a cambiar.
+        Estudiante: Busca inmuebles cerca a universiades, centros de divertimiento y entretenimiento, transporte público cerca. Busca inmuebles que tengan 1 o 2 habitaciones, 1 baño.
+        Trabajador: Busca inmuebles cerca a lugares y zonas laborales, centros comerciales, entre otros. Busca inmuebles que tenga 2 o más habitaciones, al menos 1 baño, al menos 1 parqueadero.
+        Familiar: Busca inmuebles cerca de zonas residenciales y tranquilas, centros comerciales, restaurantes, zonas educativas. Busca inmuebles que tengas más de 2 habitaciones, al menos 2 baños, al menos 1 parqueadero.
+        Persona con hijos soltera: Busca inmuebles baratos, cerca de zonas residenciales y zonas educativas. Busca inmuebles con 2 habitaciones, al menos 1 baños.
+        No olvides jamás que el presupuesto de la persona es vital para seleccionar las propiedades y el precio **NO** puede sobrepasar el presupuesto de la persona.
+        A continuación, te presentamos todas las propiedades acordes al perfil, no olvides revisar **TODAS** las características de cada una de las propiedades para 
+        seleccionar 5 en base a los anteriores requerimientos:
         ```
         {json_result_properties}
         ```
-        Deberás responder con la razón del por qué escogiste esas propiedades, el id de la propiedad, y el puntaje de compatibilidad de acuerdo al perfil del 1 al 100.
-        Devuele un máximo de 5 opciones de propiedades.
-        Responde con el siguiente JSON schema:
+        
+        Deberás responder con la razón del por qué escogiste esas propiedades, el id de la propiedad. OMITE propiedades si el precio de la propiedad es mayor a {price}
+        Si no encuentras propiedades acordes 
+        Devuelve un máximo de 5 opciones de propiedades.
+        No devuelvas propiedades donde el precio sobrepase el siguiente valor: {price}
+        Responde con el siguiente JSON schema y siempre en español:
         ```
         {
             output
         }
         ```
     """
-    # print(prompt)
 
-    chat_session = model.start_chat(
-        history=[
-            {
-                "role": "user",
-                "parts": [
-                    prompt,
-                ],
-            }
-        ]
-    )
-
-    # print("||||||||||||||||||||||||||||")
-
-    response = chat_session.send_message("Dame la respuesta")
-
-    # print(response.text)
+    response = model.generate_content(prompt)
+    print(f"Gemini response -> {response.text}")
     json_response = json.loads(response.text)
+    
     return json_response
 
 def get_recomendations(recomendetions, conexion_w):
@@ -119,10 +119,8 @@ def get_recomendations(recomendetions, conexion_w):
     mycursor_w = conexion_w.cursor()
     mycursor_w.execute(query)
     myresult = mycursor_w.fetchall()
-    properties = {}
-    number = 0
+    properties = []
     for propiedad in myresult:
-        number = number + 1
         tmp = {
            "id": propiedad[0],
            "score": propiedad[1],
@@ -194,8 +192,9 @@ def get_recomendations(recomendetions, conexion_w):
            "isExclusive": False,
            "clean_age": 7
         }
-        properties[number] = tmp
+        properties.append(tmp)
         # result_properties = pd.DataFrame(properties,columns=['property_id', 'score', 'description', 'sepomex_id', 'purpose', 'type_children', 'price', 'bathrooms', 'bedrooms','parking_num'])
+    # print(json_response)
     return properties
 
 def save_user_lifetime(conexion_w, user_lifetime, purpose, max_price, city_id, places_interest, bedrooms, parking_num):
@@ -244,7 +243,7 @@ def post_user_preferences():
     # Obtenemos datos del front
     user_lifetime = "estudiante" 
     purpose = 1 
-    max_price = 1000000
+    max_price = 800000
     city_id = 6
     places_interest = """[
         {
@@ -263,7 +262,7 @@ def post_user_preferences():
             "name": "Centro comercial"
         }
     ]"""
-    bedrooms = 1 
+    bedrooms = 1
     parking_num = 2
 
     # Conexion a BD
@@ -303,7 +302,7 @@ def post_user_preferences():
             AND highlighted != 1
             AND bedrooms >= {bedrooms}
             ORDER BY score DESC
-            limit 50
+            limit 100
         """
         
         mycursor_w = conexion_w.cursor()
