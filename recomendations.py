@@ -119,8 +119,10 @@ def get_recomendations(recomendetions, conexion_w):
     mycursor_w = conexion_w.cursor()
     mycursor_w.execute(query)
     myresult = mycursor_w.fetchall()
-    properties = []
+    properties = {}
+    number = 0
     for propiedad in myresult:
+        number = number + 1
         tmp = {
            "id": propiedad[0],
            "score": propiedad[1],
@@ -192,9 +194,8 @@ def get_recomendations(recomendetions, conexion_w):
            "isExclusive": False,
            "clean_age": 7
         }
-        properties.append(tmp)
+        properties[number] = tmp
         # result_properties = pd.DataFrame(properties,columns=['property_id', 'score', 'description', 'sepomex_id', 'purpose', 'type_children', 'price', 'bathrooms', 'bedrooms','parking_num'])
-    # print(json_response)
     return properties
 
 def save_user_lifetime(conexion_w, user_lifetime, purpose, max_price, city_id, places_interest, bedrooms, parking_num):
