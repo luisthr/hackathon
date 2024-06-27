@@ -81,7 +81,17 @@ def post_gemini(json_result_properties: dict):
     json_response = json.loads(response.text)
     return json_response
 
-def info(perfil_id):
+def post_recomendations():
+   
+    # user_lifetime, purpose, max_price, city_id, places_interest, bedrooms, parking_num
+    user_lifetime = "estudiante" 
+    purpose = 1 
+    max_price = 1000000
+    city_id = 6
+    places_interest = "hola" 
+    bedrooms = 1 
+    parking_num = 2
+
     # Conexion a BD
     conexion_w = mysql.connector.connect(
         host = "10.97.144.113",
@@ -90,31 +100,49 @@ def info(perfil_id):
         database="propiedades",
     )
 
-    # Perfilamiento de usuarios
+    # Guarda datos de usuario perfilado
     query = f"""
-        SELECT id, sepomex_id, purpose, type_children 
-        FROM profiled_user_recomendation
-        WHERE id = {perfil_id}
+        INSERT INTO profiled_recomendation (
+            user_lifetime,
+            purpose,
+            max_price,
+            city_id,
+            places_interest,
+            bedrooms,
+            parking_num
+        )
+        VALUES (
+            "{user_lifetime}",
+            {purpose},
+            {max_price},
+            {city_id},
+            "{places_interest}",
+            {bedrooms},
+            {parking_num}
+        )
     """
     mycursor_w = conexion_w.cursor()
     mycursor_w.execute(query)
-    myresult = mycursor_w.fetchall()
-    profiled_user= []
-    for x in myresult:
-        profiled_user.append(x)
-    result_profiled = pd.DataFrame(profiled_user, columns=['id','sepomex_id', 'purpose', 'type_children'])
+    conexion_w.commit()
+    row_insert = mycursor_w.rowcount
+    print("-------- Se guarda informacion de quiz")
+
     
-    print(result_profiled)
-    print(f"RESULTADO")
-    print(result_profiled['sepomex_id'])
+
+    # profiled_user= []
+    # for x in myresult:
+    #     profiled_user.append(x)
+    # result_profiled = pd.DataFrame(profiled_user, columns=['id','sepomex_id', 'purpose', 'type_children'])
+    
+    # print(result_profiled)
+    # print(f"RESULTADO")
+    # print(result_profiled['sepomex_id'])
 
     # Propiedades similares
+    # print(f"Total: {len(result_profiled)}")
     json_result_properties = {}
-    if  len(result_profiled) != 0 :
-        sepomex_id = result_profiled['sepomex_id'][0]
-        purpose = result_profiled['purpose'][0]
-        type_children = result_profiled['type_children'][0]
-
+    if  row_insert > 0:
+        print("-------- Perfila propiedades de su interes")
         purpose_str = ""
         if purpose == 1:
             purpose_str = "sale_price"
@@ -124,18 +152,18 @@ def info(perfil_id):
         query = f"""
             SELECT property_id, score, description, sepomex_id, purpose, type_children, {purpose_str} as price, bathrooms, bedrooms, parking_num
             FROM properties_search
-            WHERE sepomex_id = {sepomex_id}
+            WHERE city_id = {city_id}
             AND purpose = {purpose}
-            AND type_children = {type_children}
+            AND type_children in (1,2)
             AND status = 1
-            AND {purpose_str} >= 95000
-            AND {purpose_str} <= 105000
-            AND bedrooms >= 1
-            AND parking_num => 1
+            -- AND {purpose_str} >= 1000000
+            -- AND {purpose_str} <= 1050000
+            AND bedrooms >= {bedrooms}
+            -- AND parking_num >= 1
             ORDER BY score DESC
             limit 50
         """
-        print(query)
+        # print(query)
         mycursor_w = conexion_w.cursor()
         mycursor_w.execute(query)
         myresult = mycursor_w.fetchall()
@@ -144,11 +172,14 @@ def info(perfil_id):
             properties.append(x)
         result_properties = pd.DataFrame(properties,columns=['id', 'score', 'description', 'sepomex_id', 'purpose', 'type_children', 'price', 'bathrooms', 'bedrooms','parking_num'])
 
-        print(result_properties)
+        # print(result_properties)
 
         json_result_properties = result_properties.to_json(orient ='records') 
         # print("json_index = ", json_result_properties, "\n") 
+
+        # ENvia datos a Gemini
+        print("-------- Envia datos a Gemini")
         post_gemini(json_result_properties)
 
 
-h = info(1)
+h = post_recomendations()
