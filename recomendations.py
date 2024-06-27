@@ -30,13 +30,16 @@ def post_gemini(json_result_properties: dict):
 
     perfil = "estudiante"
     transaction = "venta"
-    price = 850000
+    price = 2050000
     habitaciones = 4
     parking_num = 1
 
     prompt = f"""
-        Eres una persona con un perfil de {perfil}, un inmueble en {transaction}, con un presupuesto de {price} pesos MXN y con una elasticidad de -5%. Tienes que encontrar los inmuebles ideales para este perfil.
-        El inmueble tiene que contar con al menos {habitaciones} cuartos y con al menos {parking_num} estacionamientos. 
+        Eres una persona con un perfil de {perfil}, un inmueble en {transaction}, con un presupuesto de {price} pesos MXN y con una elasticidad de 5%. 
+        Tienes que encontrar los inmuebles ideales para este perfil, teniendo en cuenta lo siguiente:
+        El inmueble tiene que contar con al menos {habitaciones} recámaras y con {parking_num} estacionamientos.
+        La persona quiere un inmueble cerca a Universidad Insurgentes Plantel Viaducto, Universidad Autónoma de la Ciudad de México Plantel Centro Histórico, Panteón Francés de la Piedad, Museo del Juguete Antiguo México, Mercado Jamaica.
+
         Ten en cuenta lo siguientes para los campos del JSON para la selección de las mejores propiedades:
         - price: Presupuesto de la persona.
         - scoreTotal: Puntaje total de la propiedad del 1 al 100, teniendo en cuenta que hay unas propiedades que sobrepasan el 100 por bonificaciones adicionales.
@@ -89,7 +92,7 @@ def post_recomendations():
     max_price = 1000000
     city_id = 6
     places_interest = "hola" 
-    bedrooms = 1 
+    bedrooms = 2
     parking_num = 2
 
     # Conexion a BD
@@ -167,7 +170,7 @@ def post_recomendations():
         mycursor_w = conexion_w.cursor()
         mycursor_w.execute(query)
         myresult = mycursor_w.fetchall()
-        properties = []
+        properties = [] 
         for x in myresult:
             properties.append(x)
         result_properties = pd.DataFrame(properties,columns=['id', 'score', 'description', 'sepomex_id', 'purpose', 'type_children', 'price', 'bathrooms', 'bedrooms','parking_num'])
